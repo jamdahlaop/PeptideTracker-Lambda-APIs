@@ -8,7 +8,10 @@
     "test": "node scripts/test-local.js",
     "build:hello-world": "cd src/hello-world && npm run build",
     "build:auth": "cd src/auth_service && npm run build",
-    "install:all": "cd src/hello-world && npm install && cd ../auth_service && npm install"
+    "install:all": "cd src/hello-world && npm install && cd ../auth_service && npm install",
+    "deploy:infrastructure": "cd infrastructure && terraform init && terraform apply",
+    "deploy:complete": "chmod +x scripts/deploy-complete.sh && ./scripts/deploy-complete.sh",
+    "setup:secrets": "chmod +x scripts/setup-github-secrets.sh && ./scripts/setup-github-secrets.sh"
   },
   "keywords": [
     "aws",

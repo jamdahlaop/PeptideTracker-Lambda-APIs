@@ -55,6 +55,19 @@ This project uses Terraform to manage all AWS infrastructure, ensuring consisten
 
 ### Quick Infrastructure Setup
 
+#### Option 1: Automated Setup (Recommended)
+```bash
+# One command to deploy everything
+chmod +x scripts/deploy-complete.sh
+./scripts/deploy-complete.sh
+```
+
+This script will:
+- ✅ Deploy AWS infrastructure with Terraform
+- ✅ Automatically set up GitHub secrets
+- ✅ Trigger the first Lambda deployment
+
+#### Option 2: Manual Setup
 1. **Deploy Infrastructure**:
    ```bash
    cd infrastructure
@@ -64,12 +77,11 @@ This project uses Terraform to manage all AWS infrastructure, ensuring consisten
    terraform apply
    ```
 
-2. **Get GitHub Secrets**:
+2. **Setup GitHub Secrets**:
    ```bash
-   terraform output github_secrets
+   chmod +x scripts/setup-github-secrets.sh
+   ./scripts/setup-github-secrets.sh
    ```
-
-3. **Add secrets to GitHub repository** (see GitHub Secrets section below)
 
 ### What Gets Created
 

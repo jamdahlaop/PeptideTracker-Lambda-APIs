@@ -164,7 +164,7 @@ jobs:
           --zip-file fileb://auth-service-lambda.zip \
           --region ${{ env.AWS_REGION }}
           --environment Variables='{
-            "USERS_TABLE_NAME":"peptide-tracker-users",
-            "SESSIONS_TABLE_NAME":"peptide-tracker-sessions",
-            "JWT_SECRET_NAME":"peptide-tracker/jwt-secret"
+            "USERS_TABLE_NAME":"${{ secrets.USERS_TABLE_NAME }}",
+            "SESSIONS_TABLE_NAME":"${{ secrets.SESSIONS_TABLE_NAME }}",
+            "JWT_SECRET_NAME":"${{ secrets.JWT_SECRET_NAME }}"
           }'
