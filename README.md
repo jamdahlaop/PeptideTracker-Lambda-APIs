@@ -14,6 +14,16 @@ This repository contains AWS Lambda functions for the Peptide Tracker applicatio
 │       ├── index.ts          # Main Lambda handler
 │       ├── package.json      # Dependencies and scripts
 │       └── tsconfig.json     # TypeScript configuration
+├── infrastructure/           # Terraform infrastructure as code
+│   ├── main.tf              # Main infrastructure configuration
+│   ├── variables.tf         # Terraform variables
+│   ├── outputs.tf           # Terraform outputs
+│   ├── api-gateway.tf       # API Gateway configuration
+│   └── README.md            # Infrastructure documentation
+├── scripts/                 # Utility scripts
+│   ├── deploy-infrastructure.sh # Infrastructure deployment script
+│   ├── build-all.js         # Build all Lambda functions
+│   └── test-local.js        # Local testing script
 ├── .github/
 │   └── workflows/
 │       └── deploy-lambda.yml # GitHub Actions CI/CD workflow
@@ -38,6 +48,36 @@ This repository contains AWS Lambda functions for the Peptide Tracker applicatio
   - Password hashing with bcrypt
   - Session management
   - Integration with DynamoDB and AWS Secrets Manager
+
+## Infrastructure as Code (Terraform)
+
+This project uses Terraform to manage all AWS infrastructure, ensuring consistent and reproducible deployments.
+
+### Quick Infrastructure Setup
+
+1. **Deploy Infrastructure**:
+   ```bash
+   cd infrastructure
+   cp terraform.tfvars.example terraform.tfvars
+   # Edit terraform.tfvars with your settings
+   terraform init
+   terraform apply
+   ```
+
+2. **Get GitHub Secrets**:
+   ```bash
+   terraform output github_secrets
+   ```
+
+3. **Add secrets to GitHub repository** (see GitHub Secrets section below)
+
+### What Gets Created
+
+- **DynamoDB Tables**: Users and sessions storage
+- **AWS Secrets Manager**: JWT signing secret
+- **IAM Roles & Policies**: Lambda execution permissions
+- **API Gateway**: REST API endpoints
+- **CloudWatch Logs**: Function logging
 
 ## Git-Based Deployment Process
 
