@@ -1,0 +1,26 @@
+{
+  "name": "peptide-tracker-lambda-apis",
+  "version": "1.0.0",
+  "description": "AWS Lambda functions for Peptide Tracker with Git-based deployment",
+  "main": "index.js",
+  "scripts": {
+    "build": "node scripts/build-all.js",
+    "test": "node scripts/test-local.js",
+    "build:hello-world": "cd src/hello-world && npm run build",
+    "build:auth": "cd src/auth_service && npm run build",
+    "install:all": "cd src/hello-world && npm install && cd ../auth_service && npm install"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "typescript",
+    "git-deployment",
+    "ci-cd",
+    "github-actions"
+  ],
+  "author": "Peptide Tracker Team",
+  "license": "MIT",
+  "devDependencies": {
+    "child_process": "^1.0.2"
+  }
+}
