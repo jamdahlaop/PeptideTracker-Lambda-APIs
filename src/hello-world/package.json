@@ -1,0 +1,30 @@
+{
+  "name": "hello-world-lambda",
+  "version": "1.0.0",
+  "description": "Simple Hello World Lambda function for Git-based deployment demo",
+  "main": "build/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "clean": "rm -rf build"
+  },
+  "dependencies": {
+    "@aws-sdk/client-lambda": "^3.450.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.130",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.7.2",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.3.0"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "hello-world",
+    "git-deployment"
+  ],
+  "author": "Peptide Tracker Team",
+  "license": "MIT"
+}
