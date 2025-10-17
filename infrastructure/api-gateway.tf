@@ -65,13 +65,7 @@ resource "aws_api_gateway_method" "auth_verify" {
   authorization = "NONE"
 }
 
-# CORS for all methods
-resource "aws_api_gateway_method" "options" {
-  rest_api_id   = aws_api_gateway_rest_api.main.id
-  resource_id   = aws_api_gateway_rest_api.main.root_resource_id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
+# CORS will be handled by Lambda functions
 
 # Integration responses (will be connected to Lambda functions when they're deployed)
 # Note: These will be updated by the GitHub Actions workflow after Lambda deployment

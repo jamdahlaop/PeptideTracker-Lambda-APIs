@@ -70,3 +70,14 @@ deployment/
 # Temporary files
 tmp/
 temp/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform/
+.terraform.lock.hcl
+infrastructure/.terraform/
+infrastructure/terraform.tfstate*
+infrastructure/terraform.tfvars

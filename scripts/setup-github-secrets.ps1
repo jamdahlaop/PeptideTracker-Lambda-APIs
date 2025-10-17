@@ -1,0 +1,125 @@
+# Setup GitHub Secrets Script for Windows PowerShell
+# This script automatically sets up GitHub secrets from Terraform outputs
+
+param(
+    [string]$ProfileName = "peptide-tracker"
+)
+
+Write-Host "Setting up GitHub secrets from Terraform outputs..." -ForegroundColor Green
+
+# Set AWS profile
+$env:AWS_PROFILE = $ProfileName
+
+# Check if gh CLI is installed and authenticated
+try {
+    gh --version | Out-Null
+    Write-Host "GitHub CLI (gh) is installed" -ForegroundColor Green
+} catch {
+    Write-Host "GitHub CLI (gh) is not installed. Please install it first." -ForegroundColor Red
+    Write-Host "   Visit: https://cli.github.com/" -ForegroundColor Yellow
+    exit 1
+}
+
+# Check if user is authenticated
+try {
+    gh auth status | Out-Null
+    Write-Host "GitHub CLI is authenticated" -ForegroundColor Green
+} catch {
+    Write-Host "GitHub CLI is not authenticated. Please run 'gh auth login' first." -ForegroundColor Red
+    exit 1
+}
+
+# Check if we're in the right directory
+if (-not (Test-Path "infrastructure")) {
+    Write-Host "Please run this script from the project root directory." -ForegroundColor Red
+    exit 1
+}
+
+# Navigate to infrastructure directory
+Set-Location infrastructure
+
+# Check if terraform has been applied
+if (-not (Test-Path "terraform.tfstate")) {
+    Write-Host "Terraform state not found. Please run 'terraform apply' first." -ForegroundColor Red
+    Set-Location ..
+    exit 1
+}
+
+# Get the repository name from git remote
+try {
+    $repoUrl = git remote get-url origin
+    $repoName = $repoUrl -replace '.*github.com[:/]([^.]*).*', '$1'
+    Write-Host "Repository: $repoName" -ForegroundColor Cyan
+} catch {
+    Write-Host "Could not determine repository name. Please ensure you're in a git repository." -ForegroundColor Red
+    Set-Location ..
+    exit 1
+}
+
+# Get Terraform outputs
+Write-Host "Getting Terraform outputs..." -ForegroundColor Cyan
+
+# Get AWS credentials from the specified profile
+$AccessKeyId = aws configure get aws_access_key_id --profile $ProfileName
+$SecretAccessKey = aws configure get aws_secret_access_key --profile $ProfileName
+
+if ([string]::IsNullOrEmpty($AccessKeyId) -or [string]::IsNullOrEmpty($SecretAccessKey)) {
+    Write-Host "AWS credentials not found for profile '$ProfileName'." -ForegroundColor Red
+    Write-Host "   Please run: .\scripts\setup-aws-profile.ps1" -ForegroundColor Yellow
+    Set-Location ..
+    exit 1
+}
+
+# Get other values from Terraform
+$LambdaRoleArn = terraform output -raw lambda_execution_role_arn
+$UsersTableName = terraform output -raw users_table_name
+$SessionsTableName = terraform output -raw sessions_table_name
+$JwtSecretName = terraform output -raw jwt_secret_name
+$AwsRegion = terraform output -raw aws_region
+
+Write-Host "Setting up GitHub secrets..." -ForegroundColor Cyan
+
+# Set GitHub secrets
+gh secret set AWS_ACCESS_KEY_ID --body $AccessKeyId --repo $repoName
+Write-Host "Set AWS_ACCESS_KEY_ID" -ForegroundColor Green
+
+gh secret set AWS_SECRET_ACCESS_KEY --body $SecretAccessKey --repo $repoName
+Write-Host "Set AWS_SECRET_ACCESS_KEY" -ForegroundColor Green
+
+gh secret set AWS_LAMBDA_ROLE_ARN --body $LambdaRoleArn --repo $repoName
+Write-Host "Set AWS_LAMBDA_ROLE_ARN" -ForegroundColor Green
+
+gh secret set USERS_TABLE_NAME --body $UsersTableName --repo $repoName
+Write-Host "Set USERS_TABLE_NAME" -ForegroundColor Green
+
+gh secret set SESSIONS_TABLE_NAME --body $SessionsTableName --repo $repoName
+Write-Host "Set SESSIONS_TABLE_NAME" -ForegroundColor Green
+
+gh secret set JWT_SECRET_NAME --body $JwtSecretName --repo $repoName
+Write-Host "Set JWT_SECRET_NAME" -ForegroundColor Green
+
+gh secret set AWS_REGION --body $AwsRegion --repo $repoName
+Write-Host "Set AWS_REGION" -ForegroundColor Green
+
+Write-Host ""
+Write-Host "All GitHub secrets have been set successfully!" -ForegroundColor Green
+Write-Host ""
+Write-Host "Secrets configured:" -ForegroundColor Cyan
+Write-Host "   - AWS_ACCESS_KEY_ID" -ForegroundColor White
+Write-Host "   - AWS_SECRET_ACCESS_KEY" -ForegroundColor White
+Write-Host "   - AWS_LAMBDA_ROLE_ARN" -ForegroundColor White
+Write-Host "   - USERS_TABLE_NAME" -ForegroundColor White
+Write-Host "   - SESSIONS_TABLE_NAME" -ForegroundColor White
+Write-Host "   - JWT_SECRET_NAME" -ForegroundColor White
+Write-Host "   - AWS_REGION" -ForegroundColor White
+Write-Host ""
+Write-Host "Next steps:" -ForegroundColor Green
+Write-Host "   1. Push a change to trigger the GitHub Actions workflow" -ForegroundColor White
+Write-Host "   2. Check the Actions tab to see your Lambda functions deploy" -ForegroundColor White
+Write-Host "   3. Test your API endpoints" -ForegroundColor White
+Write-Host ""
+Write-Host "Monitor deployment:" -ForegroundColor Cyan
+Write-Host "   https://github.com/$repoName/actions" -ForegroundColor Yellow
+
+# Go back to project root
+Set-Location ..

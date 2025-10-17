@@ -1,33 +1,12 @@
 # Peptide Tracker Lambda Infrastructure
 # This Terraform configuration creates all necessary AWS resources for the Lambda functions
 
-terraform {
-  required_version = ">= 1.0"
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-}
+# Main infrastructure configuration
 
+# AWS Provider configuration
 provider "aws" {
   region  = var.aws_region
   profile = var.aws_profile != "" ? var.aws_profile : null
-}
-
-# Data sources
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
-
-# Local values
-locals {
-  common_tags = {
-    Project     = "PeptideTracker"
-    Environment = var.environment
-    ManagedBy   = "Terraform"
-    Repository  = "https://github.com/jamdahlaop/PeptideTracker-Lambda-APIs"
-  }
 }
 
 # IAM Role for Lambda execution
@@ -138,6 +117,7 @@ resource "aws_dynamodb_table" "users" {
   global_secondary_index {
     name     = "EmailIndex"
     hash_key = "email"
+    projection_type = "ALL"
   }
 
   tags = local.common_tags
@@ -162,6 +142,7 @@ resource "aws_dynamodb_table" "sessions" {
   global_secondary_index {
     name     = "UserIndex"
     hash_key = "user_id"
+    projection_type = "ALL"
   }
 
   # TTL for automatic cleanup of expired sessions
@@ -206,24 +187,6 @@ resource "aws_api_gateway_rest_api" "main" {
   tags = local.common_tags
 }
 
-# API Gateway Deployment
-resource "aws_api_gateway_deployment" "main" {
-  depends_on = [
-    aws_api_gateway_method.hello_world_get,
-    aws_api_gateway_method.auth_register,
-    aws_api_gateway_method.auth_login,
-    aws_api_gateway_method.auth_verify
-  ]
-
-  rest_api_id = aws_api_gateway_rest_api.main.id
-  stage_name  = var.environment
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-# API Gateway Stage
 resource "aws_api_gateway_stage" "main" {
   deployment_id = aws_api_gateway_deployment.main.id
   rest_api_id   = aws_api_gateway_rest_api.main.id
@@ -231,6 +194,77 @@ resource "aws_api_gateway_stage" "main" {
 
   tags = local.common_tags
 }
+
+# API Gateway Integrations (placeholder - will be updated by GitHub Actions)
+resource "aws_api_gateway_integration" "hello_world_integration" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.hello_world.id
+  http_method = aws_api_gateway_method.hello_world_get.http_method
+
+  type = "MOCK"
+  request_templates = {
+    "application/json" = jsonencode({
+      statusCode = 200
+    })
+  }
+}
+
+resource "aws_api_gateway_integration" "auth_register_integration" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_register.id
+  http_method = aws_api_gateway_method.auth_register.http_method
+
+  type = "MOCK"
+  request_templates = {
+    "application/json" = jsonencode({
+      statusCode = 200
+    })
+  }
+}
+
+resource "aws_api_gateway_integration" "auth_login_integration" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_login.id
+  http_method = aws_api_gateway_method.auth_login.http_method
+
+  type = "MOCK"
+  request_templates = {
+    "application/json" = jsonencode({
+      statusCode = 200
+    })
+  }
+}
+
+resource "aws_api_gateway_integration" "auth_verify_integration" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_verify.id
+  http_method = aws_api_gateway_method.auth_verify.http_method
+
+  type = "MOCK"
+  request_templates = {
+    "application/json" = jsonencode({
+      statusCode = 200
+    })
+  }
+}
+
+
+# API Gateway Deployment
+resource "aws_api_gateway_deployment" "main" {
+  depends_on = [
+    aws_api_gateway_integration.hello_world_integration,
+    aws_api_gateway_integration.auth_register_integration,
+    aws_api_gateway_integration.auth_login_integration,
+    aws_api_gateway_integration.auth_verify_integration
+  ]
+
+  rest_api_id = aws_api_gateway_rest_api.main.id
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 
 # Lambda Functions (will be created by GitHub Actions, but we define them here for reference)
 # Note: The actual Lambda functions are deployed via GitHub Actions, but we can reference them

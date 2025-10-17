@@ -22,7 +22,6 @@ data "aws_region" "current" {}
 # Data source for GitHub repository
 data "github_repository" "main" {
   name = "PeptideTracker-Lambda-APIs"
-  owner = "jamdahlaop"
 }
 
 # Local values for common configuration
@@ -107,7 +106,7 @@ resource "local_file" "deployment_config" {
     github_repo    = "jamdahlaop/PeptideTracker-Lambda-APIs"
     github_owner   = "jamdahlaop"
     created_at     = timestamp()
-    terraform_version = terraform_version
+    terraform_version = ">= 1.0"
   })
 }
 

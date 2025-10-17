@@ -14,7 +14,11 @@
     "deploy:with-credentials": "chmod +x scripts/deploy-with-credentials.sh && ./scripts/deploy-with-credentials.sh",
     "setup:credentials": "chmod +x scripts/setup-credentials-validation.sh && ./scripts/setup-credentials-validation.sh",
     "setup:secrets": "chmod +x scripts/setup-github-secrets.sh && ./scripts/setup-github-secrets.sh",
-    "setup:aws-profile": "chmod +x scripts/setup-aws-profile.sh && ./scripts/setup-aws-profile.sh"
+    "setup:aws-profile": "chmod +x scripts/setup-aws-profile.sh && ./scripts/setup-aws-profile.sh",
+    "setup:aws-profile:win": "powershell -ExecutionPolicy Bypass -File scripts/setup-aws-profile.ps1",
+    "deploy:infrastructure:win": "powershell -ExecutionPolicy Bypass -File scripts/deploy-infrastructure.ps1",
+    "setup:secrets:win": "powershell -ExecutionPolicy Bypass -File scripts/setup-github-secrets.ps1",
+    "deploy:complete:win": "powershell -ExecutionPolicy Bypass -File scripts/deploy-complete.ps1"
   },
   "keywords": [
     "aws",
