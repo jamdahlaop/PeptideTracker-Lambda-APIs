@@ -1,0 +1,48 @@
+{
+  "development": {
+    "api": {
+      "baseUrl": "https://7v2du6tsqk.execute-api.us-east-1.amazonaws.com/dev",
+      "endpoints": {
+        "hello": "/hello",
+        "auth": {
+          "register": "/auth/register",
+          "login": "/auth/login",
+          "verify": "/auth/verify"
+        },
+        "credentialValidator": "/credential-validator"
+      }
+    },
+    "aws": {
+      "region": "us-east-1",
+      "environment": "dev"
+    },
+    "features": {
+      "cors": true,
+      "logging": true,
+      "testing": true
+    }
+  },
+  "production": {
+    "api": {
+      "baseUrl": "https://your-production-api.execute-api.us-east-1.amazonaws.com/prod",
+      "endpoints": {
+        "hello": "/hello",
+        "auth": {
+          "register": "/auth/register",
+          "login": "/auth/login",
+          "verify": "/auth/verify"
+        },
+        "credentialValidator": "/credential-validator"
+      }
+    },
+    "aws": {
+      "region": "us-east-1",
+      "environment": "prod"
+    },
+    "features": {
+      "cors": true,
+      "logging": true,
+      "testing": false
+    }
+  }
+}
