@@ -1,0 +1,114 @@
+name: Deploy Lambda Functions (Dynamic)
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  NODE_VERSION: '22'
+
+jobs:
+  discover-functions:
+    runs-on: ubuntu-latest
+    outputs:
+      functions: ${{ steps.discover.outputs.functions }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Discover Lambda functions
+      id: discover
+      run: |
+        # Find all Lambda functions (directories in src/ that have package.json)
+        functions=$(find src -maxdepth 2 -name "package.json" -not -path "*/lambda-template/*" | sed 's|src/||' | sed 's|/package.json||' | tr '\n' ' ')
+        echo "functions=$functions" >> $GITHUB_OUTPUT
+        echo "Discovered functions: $functions"
+
+  test:
+    needs: discover-functions
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        function: ${{ fromJson(format('["{0}"]', needs.discover-functions.outputs.functions)) }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        
+    - name: Install dependencies for ${{ matrix.function }}
+      run: |
+        cd src/${{ matrix.function }}
+        npm install
+        
+    - name: Build ${{ matrix.function }}
+      run: |
+        cd src/${{ matrix.function }}
+        npm run build
+
+  deploy:
+    needs: [discover-functions, test]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        function: ${{ fromJson(format('["{0}"]', needs.discover-functions.outputs.functions)) }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        
+    - name: Configure AWS credentials (OIDC)
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Install dependencies for ${{ matrix.function }}
+      run: |
+        cd src/${{ matrix.function }}
+        npm install
+        
+    - name: Build ${{ matrix.function }}
+      run: |
+        cd src/${{ matrix.function }}
+        npm run build
+        
+    - name: Create deployment package for ${{ matrix.function }}
+      run: |
+        cd src/${{ matrix.function }}
+        mkdir -p deployment
+        cp -r build/* deployment/
+        cp package.json deployment/
+        cd deployment
+        npm install --production
+        zip -r ${{ matrix.function }}-lambda.zip .
+        
+    - name: Deploy ${{ matrix.function }} to Lambda
+      run: |
+        cd src/${{ matrix.function }}/deployment
+        aws lambda update-function-code \
+          --function-name ${{ matrix.function }}-lambda \
+          --zip-file fileb://${{ matrix.function }}-lambda.zip \
+          --region ${{ env.AWS_REGION }} || \
+        aws lambda create-function \
+          --function-name ${{ matrix.function }}-lambda \
+          --runtime nodejs22.x \
+          --role ${{ secrets.AWS_LAMBDA_ROLE_ARN }} \
+          --handler index.handler \
+          --zip-file fileb://${{ matrix.function }}-lambda.zip \
+          --region ${{ env.AWS_REGION }}

@@ -81,3 +81,6 @@ temp/
 infrastructure/.terraform/
 infrastructure/terraform.tfstate*
 infrastructure/terraform.tfvars
+
+# Old Lambda functions (to be integrated)
+lambda/
