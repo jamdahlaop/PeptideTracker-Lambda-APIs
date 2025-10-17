@@ -13,7 +13,8 @@
     "deploy:complete": "chmod +x scripts/deploy-complete.sh && ./scripts/deploy-complete.sh",
     "deploy:enhanced": "chmod +x scripts/deploy-complete-enhanced.sh && ./scripts/deploy-complete-enhanced.sh",
     "setup:local": "chmod +x scripts/setup-local-environment.sh && ./scripts/setup-local-environment.sh",
-    "setup:secrets": "chmod +x scripts/setup-github-secrets.sh && ./scripts/setup-github-secrets.sh"
+    "setup:secrets": "chmod +x scripts/setup-github-secrets.sh && ./scripts/setup-github-secrets.sh",
+    "setup:aws-profile": "chmod +x scripts/setup-aws-profile.sh && ./scripts/setup-aws-profile.sh"
   },
   "keywords": [
     "aws",

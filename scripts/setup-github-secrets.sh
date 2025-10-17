@@ -35,6 +35,10 @@ if [ ! -f "terraform.tfstate" ]; then
     exit 1
 fi
 
+# Set AWS profile for terraform commands
+export AWS_PROFILE=${AWS_PROFILE:-peptide-tracker}
+echo "🔧 Using AWS profile: $AWS_PROFILE"
+
 # Get the repository name from git remote
 REPO_NAME=$(git remote get-url origin | sed 's/.*github.com[:/]\([^.]*\).*/\1/')
 echo "📋 Repository: $REPO_NAME"
@@ -42,9 +46,12 @@ echo "📋 Repository: $REPO_NAME"
 # Get Terraform outputs
 echo "📦 Getting Terraform outputs..."
 
-# Get AWS credentials (these should be in your environment or AWS CLI config)
-AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-$(aws configure get aws_access_key_id)}
-AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-$(aws configure get aws_secret_access_key)}
+# Get AWS profile from environment or use peptide-tracker
+AWS_PROFILE=${AWS_PROFILE:-peptide-tracker}
+
+# Get AWS credentials from the specified profile
+AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-$(aws configure get aws_access_key_id --profile $AWS_PROFILE)}
+AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-$(aws configure get aws_secret_access_key --profile $AWS_PROFILE)}
 
 if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
     echo "❌ AWS credentials not found. Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables."

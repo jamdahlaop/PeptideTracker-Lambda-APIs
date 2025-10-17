@@ -17,11 +17,16 @@ if ! command -v terraform &> /dev/null; then
     exit 1
 fi
 
-# Check if AWS CLI is configured
-if ! aws sts get-caller-identity &> /dev/null; then
-    echo "❌ AWS CLI is not configured. Please run 'aws configure' first."
+# Check if AWS CLI is configured (try peptide-tracker profile first)
+AWS_PROFILE=${AWS_PROFILE:-peptide-tracker}
+if ! aws sts get-caller-identity --profile "$AWS_PROFILE" &> /dev/null; then
+    echo "❌ AWS CLI is not configured for profile '$AWS_PROFILE'."
+    echo "   Please run: ./scripts/setup-aws-profile.sh"
+    echo "   Or configure manually: aws configure --profile peptide-tracker"
     exit 1
 fi
+
+echo "✅ Using AWS profile: $AWS_PROFILE"
 
 # Check if GitHub CLI is installed
 if ! command -v gh &> /dev/null; then

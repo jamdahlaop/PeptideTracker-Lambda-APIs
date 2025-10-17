@@ -29,3 +29,9 @@ variable "lambda_memory_size" {
   type        = number
   default     = 256
 }
+
+variable "aws_profile" {
+  description = "AWS profile to use (leave empty to use default profile)"
+  type        = string
+  default     = ""
+}

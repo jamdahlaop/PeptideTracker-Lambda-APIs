@@ -57,13 +57,19 @@ This project uses Terraform to manage all AWS infrastructure, ensuring consisten
 
 #### Option 1: Enhanced Automated Setup (Recommended)
 ```bash
-# One command to deploy everything with local credential management
+# First, set up your AWS profile
+npm run setup:aws-profile
+# or
+./scripts/setup-aws-profile.sh
+
+# Then deploy everything with local credential management
 npm run deploy:enhanced
 # or
 ./scripts/deploy-complete-enhanced.sh
 ```
 
 This script will:
+- ✅ Set up dedicated AWS profile (peptide-tracker)
 - ✅ Validate AWS and GitHub credentials
 - ✅ Set up local development environment
 - ✅ Deploy AWS infrastructure with Terraform
