@@ -25,3 +25,4 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   return response;
 };
 // Trigger deployment - 10/17/2025 08:09:22
+// OIDC deployment test - 10/17/2025 09:35:07

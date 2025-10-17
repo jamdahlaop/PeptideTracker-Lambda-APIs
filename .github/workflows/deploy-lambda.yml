@@ -1,11 +1,11 @@
-name: Deploy Lambda Functions
+name: Deploy Lambda Functions (OIDC)
 
 on:
   push:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
-  workflow_dispatch: # Allow manual triggering
+  workflow_dispatch:
 
 env:
   AWS_REGION: us-east-1
@@ -44,16 +44,14 @@ jobs:
       run: |
         cd src/hello-world
         npm run build
-        
-    - name: Run tests (if available)
-      run: |
-        cd src/auth_service && npm test || echo "No tests found"
-        cd ../hello-world && npm test || echo "No tests found"
 
   deploy-hello-world:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    permissions:
+      id-token: write
+      contents: read
     
     steps:
     - name: Checkout code
@@ -65,11 +63,10 @@ jobs:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
         
-    - name: Configure AWS credentials
+    - name: Configure AWS credentials (OIDC)
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
         aws-region: ${{ env.AWS_REGION }}
         
     - name: Install dependencies
@@ -111,6 +108,9 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    permissions:
+      id-token: write
+      contents: read
     
     steps:
     - name: Checkout code
@@ -122,11 +122,10 @@ jobs:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
         
-    - name: Configure AWS credentials
+    - name: Configure AWS credentials (OIDC)
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
         aws-region: ${{ env.AWS_REGION }}
         
     - name: Install dependencies
