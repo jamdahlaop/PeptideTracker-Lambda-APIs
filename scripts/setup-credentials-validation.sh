@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Setup Local Environment Script
-# This script sets up the local development environment with proper credential management
+# Setup Credentials Validation Script
+# This script validates AWS and GitHub credentials and sets up the development environment
 
 set -e
 
-echo "🔧 Setting up local development environment..."
+echo "🔧 Setting up credentials validation and development environment..."
 
 # Check prerequisites
 echo "🔍 Checking prerequisites..."
@@ -46,12 +46,12 @@ echo "✅ All prerequisites met!"
 # Navigate to infrastructure directory
 cd infrastructure
 
-# Check if local.tfvars exists
-if [ ! -f "local.tfvars" ]; then
-    echo "📝 Creating local.tfvars from example..."
-    cp local.tfvars.example local.tfvars
-    echo "✅ Created local.tfvars (using default values)"
-    echo "📝 You can edit local.tfvars to customize your setup"
+# Check if credentials.tfvars exists
+if [ ! -f "credentials.tfvars" ]; then
+    echo "📝 Creating credentials.tfvars from example..."
+    cp credentials.tfvars.example credentials.tfvars
+    echo "✅ Created credentials.tfvars (using default values)"
+    echo "📝 You can edit credentials.tfvars to customize your setup"
 fi
 
 # Initialize Terraform
@@ -62,9 +62,9 @@ terraform init
 echo "🔍 Validating Terraform configuration..."
 terraform validate
 
-# Plan the local setup
-echo "📋 Planning local environment setup..."
-terraform plan -var-file="local.tfvars" -target=null_resource.validate_aws_credentials
+# Plan the credentials validation setup
+echo "📋 Planning credentials validation setup..."
+terraform plan -var-file="credentials.tfvars" -target=null_resource.validate_aws_credentials
 
 # Ask for confirmation
 echo ""
@@ -77,12 +77,12 @@ fi
 
 # Apply the validation
 echo "🔍 Validating credentials..."
-terraform apply -var-file="local.tfvars" -target=null_resource.validate_aws_credentials -auto-approve
-terraform apply -var-file="local.tfvars" -target=null_resource.validate_github_auth -auto-approve
+terraform apply -var-file="credentials.tfvars" -target=null_resource.validate_aws_credentials -auto-approve
+terraform apply -var-file="credentials.tfvars" -target=null_resource.validate_github_auth -auto-approve
 
-# Apply the full local setup
-echo "🏗️  Setting up local environment..."
-terraform apply -var-file="local.tfvars" -auto-approve
+# Apply the full credentials setup
+echo "🏗️  Setting up credentials validation environment..."
+terraform apply -var-file="credentials.tfvars" -auto-approve
 
 echo ""
 echo "✅ Local environment setup complete!"

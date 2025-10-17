@@ -13,13 +13,19 @@ This directory contains Terraform configuration for the AWS infrastructure requi
 1. **Copy the example variables file**:
    ```bash
    cp terraform.tfvars.example terraform.tfvars
+   cp credentials.tfvars.example credentials.tfvars
    ```
 
-2. **Customize the variables** in `terraform.tfvars`:
+2. **Customize the variables** in `terraform.tfvars` and `credentials.tfvars`:
    ```hcl
+   # terraform.tfvars
    aws_region     = "us-east-1"
    environment    = "dev"
    project_name   = "peptide-tracker"
+   
+   # credentials.tfvars
+   aws_profile    = "peptide-tracker"
+   create_local_credentials = false
    ```
 
 3. **Initialize Terraform**:

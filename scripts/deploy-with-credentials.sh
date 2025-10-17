@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Enhanced Complete Deployment Script
-# This script uses the local Terraform setup for better credential management
+# Deploy with Credentials Validation Script
+# This script uses the credentials validation setup for secure deployment
 
 set -e
 
@@ -13,20 +13,20 @@ if [ ! -d "infrastructure" ]; then
     exit 1
 fi
 
-# Step 1: Setup Local Environment
-echo "🔧 Step 1: Setting up local environment..."
-chmod +x scripts/setup-local-environment.sh
-./scripts/setup-local-environment.sh
+# Step 1: Setup Credentials Validation
+echo "🔧 Step 1: Setting up credentials validation..."
+chmod +x scripts/setup-credentials-validation.sh
+./scripts/setup-credentials-validation.sh
 
 # Step 2: Deploy Infrastructure
 echo ""
 echo "🏗️  Step 2: Deploying AWS Infrastructure..."
 cd infrastructure
 
-# Use local configuration if available
-if [ -f "local.tfvars" ]; then
-    echo "📋 Using local configuration..."
-    terraform apply -var-file="local.tfvars" -auto-approve
+# Use credentials configuration if available
+if [ -f "credentials.tfvars" ]; then
+    echo "📋 Using credentials configuration..."
+    terraform apply -var-file="credentials.tfvars" -auto-approve
 else
     echo "📋 Using default configuration..."
     terraform apply -auto-approve

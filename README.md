@@ -55,23 +55,23 @@ This project uses Terraform to manage all AWS infrastructure, ensuring consisten
 
 ### Quick Infrastructure Setup
 
-#### Option 1: Enhanced Automated Setup (Recommended)
+#### Option 1: Credentials-Validated Setup (Recommended)
 ```bash
 # First, set up your AWS profile
 npm run setup:aws-profile
 # or
 ./scripts/setup-aws-profile.sh
 
-# Then deploy everything with local credential management
-npm run deploy:enhanced
+# Then deploy everything with credentials validation
+npm run deploy:with-credentials
 # or
-./scripts/deploy-complete-enhanced.sh
+./scripts/deploy-with-credentials.sh
 ```
 
 This script will:
 - ✅ Set up dedicated AWS profile (peptide-tracker)
 - ✅ Validate AWS and GitHub credentials
-- ✅ Set up local development environment
+- ✅ Set up credentials validation environment
 - ✅ Deploy AWS infrastructure with Terraform
 - ✅ Automatically set up GitHub secrets
 - ✅ Trigger the first Lambda deployment
@@ -99,9 +99,17 @@ This script will:
    terraform apply
    ```
 
-2. **Setup GitHub Secrets**:
+2. **Setup Credentials Validation**:
    ```bash
-   chmod +x scripts/setup-github-secrets.sh
+   npm run setup:credentials
+   # or
+   ./scripts/setup-credentials-validation.sh
+   ```
+
+3. **Setup GitHub Secrets**:
+   ```bash
+   npm run setup:secrets
+   # or
    ./scripts/setup-github-secrets.sh
    ```
 
