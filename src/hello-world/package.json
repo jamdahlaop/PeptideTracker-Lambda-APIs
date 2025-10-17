@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Simple Hello World Lambda function for Git-based deployment demo",
   "main": "build/index.js",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "build": "tsc",
     "test": "jest",

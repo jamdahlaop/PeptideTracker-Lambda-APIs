@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Authentication service for Peptide Tracker",
   "main": "build/index.js",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "build": "tsc",
     "test": "jest",

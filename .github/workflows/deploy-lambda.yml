@@ -9,7 +9,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  NODE_VERSION: '18'
+  NODE_VERSION: '22'
 
 jobs:
   test:
@@ -96,7 +96,7 @@ jobs:
           --region ${{ env.AWS_REGION }} || \
         aws lambda create-function \
           --function-name hello-world-lambda \
-          --runtime nodejs18.x \
+          --runtime nodejs22.x \
           --role ${{ secrets.AWS_LAMBDA_ROLE_ARN }} \
           --handler index.handler \
           --zip-file fileb://hello-world-lambda.zip \
@@ -154,7 +154,7 @@ jobs:
           --region ${{ env.AWS_REGION }} || \
         aws lambda create-function \
           --function-name auth-service-lambda \
-          --runtime nodejs18.x \
+          --runtime nodejs22.x \
           --role ${{ secrets.AWS_LAMBDA_ROLE_ARN }} \
           --handler index.handler \
           --zip-file fileb://auth-service-lambda.zip \
