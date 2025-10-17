@@ -4,7 +4,7 @@ import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 const lambdaClient = new LambdaClient({ region: 'us-east-1' });
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  console.log('Sessions Validator Lambda function called');
+  console.log('Sessions Validator Lambda function called - npm cache fix test');
   console.log('Event:', JSON.stringify(event, null, 2));
 
   try {
