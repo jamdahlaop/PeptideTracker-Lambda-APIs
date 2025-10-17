@@ -13,7 +13,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const { token, session, targetFunction } = body;
 
     // Extract JWT token from Authorization header or body
-    const authHeader = event.headers.Authorization || event.headers.authorization;
+    const authHeader = event.headers?.Authorization || event.headers?.authorization;
     const jwtToken = authHeader?.replace('Bearer ', '') || token;
 
     // Basic validation - check if we have a token/session

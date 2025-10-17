@@ -5,10 +5,10 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   console.log('Event:', JSON.stringify(event, null, 2));
 
   // Extract JWT token and session from headers or body
-  const authHeader = event.headers.Authorization || event.headers.authorization;
+  const authHeader = event.headers?.Authorization || event.headers?.authorization;
   const jwtToken = authHeader?.replace('Bearer ', '');
-  const session = event.headers['X-Session'] || '';
-  const validatedBy = event.headers['X-Validated-By'] || 'direct-call';
+  const session = event.headers?.['X-Session'] || '';
+  const validatedBy = event.headers?.['X-Validated-By'] || 'direct-call';
 
   // Parse body if it exists
   let requestBody = {};
