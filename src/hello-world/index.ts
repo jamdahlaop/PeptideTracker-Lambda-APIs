@@ -13,7 +13,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
     },
     body: JSON.stringify({
-      message: 'Hello from Lambda via Git deployment!',
+      message: 'Hello from Lambda via Git deployment! - Updated automatically!',
       timestamp: new Date().toISOString(),
       method: event.httpMethod,
       path: event.path,
