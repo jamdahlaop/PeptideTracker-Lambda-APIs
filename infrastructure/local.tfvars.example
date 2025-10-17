@@ -1,0 +1,16 @@
+# Local Terraform variables example
+# Copy this to local.tfvars and customize for your local setup
+
+# AWS Configuration
+aws_region     = "us-east-1"
+environment    = "dev"
+project_name   = "peptide-tracker"
+
+# Credential Management
+# Leave these empty to use AWS CLI and GitHub CLI configuration
+aws_access_key_id     = ""
+aws_secret_access_key = ""
+github_token          = ""
+
+# Local Development
+create_local_credentials = false  # Set to true if you want a local .env file

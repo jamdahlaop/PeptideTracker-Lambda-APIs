@@ -55,10 +55,26 @@ This project uses Terraform to manage all AWS infrastructure, ensuring consisten
 
 ### Quick Infrastructure Setup
 
-#### Option 1: Automated Setup (Recommended)
+#### Option 1: Enhanced Automated Setup (Recommended)
+```bash
+# One command to deploy everything with local credential management
+npm run deploy:enhanced
+# or
+./scripts/deploy-complete-enhanced.sh
+```
+
+This script will:
+- ✅ Validate AWS and GitHub credentials
+- ✅ Set up local development environment
+- ✅ Deploy AWS infrastructure with Terraform
+- ✅ Automatically set up GitHub secrets
+- ✅ Trigger the first Lambda deployment
+
+#### Option 2: Basic Automated Setup
 ```bash
 # One command to deploy everything
-chmod +x scripts/deploy-complete.sh
+npm run deploy:complete
+# or
 ./scripts/deploy-complete.sh
 ```
 
@@ -67,7 +83,7 @@ This script will:
 - ✅ Automatically set up GitHub secrets
 - ✅ Trigger the first Lambda deployment
 
-#### Option 2: Manual Setup
+#### Option 3: Manual Setup
 1. **Deploy Infrastructure**:
    ```bash
    cd infrastructure

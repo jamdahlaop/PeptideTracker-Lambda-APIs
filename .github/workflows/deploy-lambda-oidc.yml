@@ -1,0 +1,169 @@
+name: Deploy Lambda Functions (OIDC)
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  NODE_VERSION: '18'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Install dependencies for auth service
+      run: |
+        cd src/auth_service
+        npm ci
+        
+    - name: Install dependencies for hello-world service
+      run: |
+        cd src/hello-world
+        npm ci
+        
+    - name: Build auth service
+      run: |
+        cd src/auth_service
+        npm run build
+        
+    - name: Build hello-world service
+      run: |
+        cd src/hello-world
+        npm run build
+
+  deploy-hello-world:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Configure AWS credentials (OIDC)
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Install dependencies
+      run: |
+        cd src/hello-world
+        npm ci
+        
+    - name: Build
+      run: |
+        cd src/hello-world
+        npm run build
+        
+    - name: Create deployment package
+      run: |
+        cd src/hello-world
+        mkdir -p deployment
+        cp -r build/* deployment/
+        cp package.json deployment/
+        cd deployment
+        npm install --production
+        zip -r hello-world-lambda.zip .
+        
+    - name: Deploy to Lambda
+      run: |
+        cd src/hello-world/deployment
+        aws lambda update-function-code \
+          --function-name hello-world-lambda \
+          --zip-file fileb://hello-world-lambda.zip \
+          --region ${{ env.AWS_REGION }} || \
+        aws lambda create-function \
+          --function-name hello-world-lambda \
+          --runtime nodejs18.x \
+          --role ${{ secrets.AWS_LAMBDA_ROLE_ARN }} \
+          --handler index.handler \
+          --zip-file fileb://hello-world-lambda.zip \
+          --region ${{ env.AWS_REGION }}
+
+  deploy-auth-service:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Configure AWS credentials (OIDC)
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Install dependencies
+      run: |
+        cd src/auth_service
+        npm ci
+        
+    - name: Build
+      run: |
+        cd src/auth_service
+        npm run build
+        
+    - name: Create deployment package
+      run: |
+        cd src/auth_service
+        mkdir -p deployment
+        cp -r build/* deployment/
+        cp package.json deployment/
+        cd deployment
+        npm install --production
+        zip -r auth-service-lambda.zip .
+        
+    - name: Deploy to Lambda
+      run: |
+        cd src/auth_service/deployment
+        aws lambda update-function-code \
+          --function-name auth-service-lambda \
+          --zip-file fileb://auth-service-lambda.zip \
+          --region ${{ env.AWS_REGION }} || \
+        aws lambda create-function \
+          --function-name auth-service-lambda \
+          --runtime nodejs18.x \
+          --role ${{ secrets.AWS_LAMBDA_ROLE_ARN }} \
+          --handler index.handler \
+          --zip-file fileb://auth-service-lambda.zip \
+          --region ${{ env.AWS_REGION }}
+          --environment Variables='{
+            "USERS_TABLE_NAME":"${{ secrets.USERS_TABLE_NAME }}",
+            "SESSIONS_TABLE_NAME":"${{ secrets.SESSIONS_TABLE_NAME }}",
+            "JWT_SECRET_NAME":"${{ secrets.JWT_SECRET_NAME }}"
+          }'
