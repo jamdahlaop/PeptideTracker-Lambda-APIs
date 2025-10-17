@@ -10,12 +10,16 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   try {
     // Parse the request body
     const body = event.body ? JSON.parse(event.body) : {};
-    const { token, credentials, userId, targetFunction } = body;
+    const { token, session, targetFunction } = body;
 
-    // Dummy validation logic for testing
-    const isValid = validateCredentials(token, credentials, userId);
+    // Extract JWT token from Authorization header or body
+    const authHeader = event.headers.Authorization || event.headers.authorization;
+    const jwtToken = authHeader?.replace('Bearer ', '') || token;
 
-    if (!isValid) {
+    // Basic validation - check if we have a token/session
+    const hasValidToken = !!jwtToken || !!session;
+
+    if (!hasValidToken) {
       return {
         statusCode: 401,
         headers: {
@@ -25,16 +29,10 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
           'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
         },
         body: JSON.stringify({
-          message: 'Authentication failed',
+          message: 'Missing authentication token or session',
           timestamp: new Date().toISOString(),
-          validation: {
-            isValid: false,
-            userId: userId || 'unknown',
-            tokenPresent: !!token,
-            credentialsPresent: !!credentials,
-            validationType: 'dummy-validation'
-          },
-          source: 'Credential Validator - Authentication Failed'
+          error: 'No JWT token or session provided',
+          source: 'Credential Validator - Missing Auth'
         })
       };
     }
@@ -44,11 +42,20 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     console.log(`Forwarding request to: ${targetFunctionName}`);
 
     try {
-      // Create a new event for the target function
+      // Create a new event for the target function with JWT token and session
       const targetEvent = {
         ...event,
+        headers: {
+          ...event.headers,
+          'Authorization': `Bearer ${jwtToken}`,
+          'X-Session': session || '',
+          'X-Validated-By': 'credential-validator',
+          'X-Validation-Timestamp': new Date().toISOString()
+        },
         body: JSON.stringify({
           ...body,
+          jwtToken,
+          session,
           validatedBy: 'credential-validator',
           validationTimestamp: new Date().toISOString()
         })

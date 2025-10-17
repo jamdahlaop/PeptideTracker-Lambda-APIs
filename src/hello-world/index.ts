@@ -4,6 +4,20 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   console.log('Hello World Lambda function called');
   console.log('Event:', JSON.stringify(event, null, 2));
 
+  // Extract JWT token and session from headers or body
+  const authHeader = event.headers.Authorization || event.headers.authorization;
+  const jwtToken = authHeader?.replace('Bearer ', '');
+  const session = event.headers['X-Session'] || '';
+  const validatedBy = event.headers['X-Validated-By'] || 'direct-call';
+
+  // Parse body if it exists
+  let requestBody = {};
+  try {
+    requestBody = event.body ? JSON.parse(event.body) : {};
+  } catch (error) {
+    console.log('Could not parse request body:', error);
+  }
+
   const response = {
     statusCode: 200,
     headers: {
@@ -18,7 +32,21 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       method: event.httpMethod,
       path: event.path,
       queryParams: event.queryStringParameters,
-      source: 'Git-based deployment'
+      source: 'Git-based deployment',
+      authentication: {
+        hasJwtToken: !!jwtToken,
+        hasSession: !!session,
+        validatedBy: validatedBy,
+        tokenLength: jwtToken ? jwtToken.length : 0
+      },
+      requestData: {
+        body: requestBody,
+        headers: {
+          authorization: !!authHeader,
+          session: !!session,
+          validatedBy: validatedBy
+        }
+      }
     })
   };
 
