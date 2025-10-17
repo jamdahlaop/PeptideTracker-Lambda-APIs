@@ -35,8 +35,9 @@ describe('Credential Validator Lambda', () => {
     const result = await handler(mockEvent);
     
     expect(result.statusCode).toBe(200);
-    expect(result.headers['Content-Type']).toBe('application/json');
-    expect(result.headers['Access-Control-Allow-Origin']).toBe('*');
+    expect(result.headers).toBeDefined();
+    expect(result.headers!['Content-Type']).toBe('application/json');
+    expect(result.headers!['Access-Control-Allow-Origin']).toBe('*');
     
     const body = JSON.parse(result.body);
     expect(body.message).toBe('Credential validation completed');
