@@ -28,12 +28,12 @@ jobs:
     - name: Install dependencies for auth service
       run: |
         cd src/auth_service
-        npm ci
+        npm install
         
     - name: Install dependencies for hello-world service
       run: |
         cd src/hello-world
-        npm ci
+        npm install
         
     - name: Build auth service
       run: |
@@ -72,7 +72,7 @@ jobs:
     - name: Install dependencies
       run: |
         cd src/hello-world
-        npm ci
+        npm install
         
     - name: Build
       run: |
@@ -131,7 +131,7 @@ jobs:
     - name: Install dependencies
       run: |
         cd src/auth_service
-        npm ci
+        npm install
         
     - name: Build
       run: |
