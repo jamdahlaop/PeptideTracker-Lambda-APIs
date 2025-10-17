@@ -34,10 +34,10 @@ afterAll(() => {
   console.log = originalConsoleLog;
 });
 
-describe('Credential Validator Lambda', () => {
+describe('Sessions Validator Lambda', () => {
   const mockEvent: APIGatewayProxyEvent = {
     httpMethod: 'POST',
-    path: '/credential-validator',
+    path: '/sessions-validator',
     body: JSON.stringify({
       jwtToken: 'test-jwt-token',
       session: 'test-session',

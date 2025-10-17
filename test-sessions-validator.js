@@ -15,7 +15,7 @@ const postData = JSON.stringify(testData);
 const options = {
   hostname: '7v2du6tsqk.execute-api.us-east-1.amazonaws.com',
   port: 443,
-  path: '/dev/credential-validator',
+  path: '/dev/sessions-validator',
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -23,7 +23,7 @@ const options = {
   }
 };
 
-console.log('Testing Credential Validator endpoint...');
+console.log('Testing Sessions Validator endpoint...');
 console.log('URL:', `https://${options.hostname}${options.path}`);
 console.log('Payload:', JSON.stringify(testData, null, 2));
 

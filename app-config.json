@@ -9,7 +9,7 @@
           "login": "/auth/login",
           "verify": "/auth/verify"
         },
-        "credentialValidator": "/credential-validator"
+            "sessionsValidator": "/sessions-validator"
       }
     },
     "aws": {
@@ -32,7 +32,7 @@
           "login": "/auth/login",
           "verify": "/auth/verify"
         },
-        "credentialValidator": "/credential-validator"
+            "sessionsValidator": "/sessions-validator"
       }
     },
     "aws": {

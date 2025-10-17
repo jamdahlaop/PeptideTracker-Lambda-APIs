@@ -4,7 +4,7 @@ import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 const lambdaClient = new LambdaClient({ region: 'us-east-1' });
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  console.log('Credential Validator Lambda function called');
+  console.log('Sessions Validator Lambda function called');
   console.log('Event:', JSON.stringify(event, null, 2));
 
   try {
@@ -32,7 +32,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
           message: 'Missing authentication token or session',
           timestamp: new Date().toISOString(),
           error: 'No JWT token or session provided',
-          source: 'Credential Validator - Missing Auth'
+          source: 'Sessions Validator - Missing Auth'
         })
       };
     }
@@ -100,12 +100,12 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
           message: 'Error forwarding request to target function',
           timestamp: new Date().toISOString(),
           error: invokeError instanceof Error ? invokeError.message : 'Unknown error',
-          source: 'Credential Validator - Forwarding Error'
+          source: 'Sessions Validator - Forwarding Error'
         })
       };
     }
   } catch (error) {
-    console.error('Error in credential validator:', error);
+    console.error('Error in sessions validator:', error);
     
     return {
       statusCode: 500,

@@ -1,7 +1,7 @@
 {
-  "name": "credential-validator-lambda",
+  "name": "sessions-validator-lambda",
   "version": "1.0.0",
-  "description": "Dummy credential validator Lambda function for testing",
+  "description": "Sessions validator Lambda function for JWT token and session validation",
   "main": "build/index.js",
   "engines": {
     "node": ">=22.0.0"
@@ -39,8 +39,9 @@
   "keywords": [
     "aws",
     "lambda",
-    "credential-validator",
-    "testing",
+    "sessions-validator",
+    "jwt",
+    "authentication",
     "git-deployment"
   ],
   "author": "Peptide Tracker Team",

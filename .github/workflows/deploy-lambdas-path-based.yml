@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       hello-world: ${{ steps.changes.outputs.hello-world }}
-      credential-validator: ${{ steps.changes.outputs.credential-validator }}
+      sessions-validator: ${{ steps.changes.outputs.sessions-validator }}
       auth-service: ${{ steps.changes.outputs.auth-service }}
     steps:
       - uses: actions/checkout@v4
@@ -29,8 +29,8 @@ jobs:
           filters: |
             hello-world:
               - 'src/hello-world/**'
-            credential-validator:
-              - 'src/credential-validator/**'
+            sessions-validator:
+              - 'src/sessions-validator/**'
             auth-service:
               - 'src/auth_service/**'
 
@@ -58,9 +58,9 @@ jobs:
           cd src/hello-world
           npm run build
 
-  test-credential-validator:
+  test-sessions-validator:
     needs: detect-changes
-    if: ${{ needs.detect-changes.outputs.credential-validator == 'true' }}
+    if: ${{ needs.detect-changes.outputs.sessions-validator == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -74,17 +74,17 @@ jobs:
       
       - name: Install dependencies
         run: |
-          cd src/credential-validator
+          cd src/sessions-validator
           npm ci
       
       - name: Build
         run: |
-          cd src/credential-validator
+          cd src/sessions-validator
           npm run build
       
       - name: Run tests
         run: |
-          cd src/credential-validator
+          cd src/sessions-validator
           npm test -- --passWithNoTests
 
   test-auth-service:
@@ -175,9 +175,9 @@ jobs:
           cd src/hello-world
           rm -rf deployment
 
-  deploy-credential-validator:
-    needs: [detect-changes, test-credential-validator]
-    if: ${{ needs.detect-changes.outputs.credential-validator == 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
+  deploy-sessions-validator:
+    needs: [detect-changes, test-sessions-validator]
+    if: ${{ needs.detect-changes.outputs.sessions-validator == 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -201,42 +201,42 @@ jobs:
       
       - name: Install dependencies
         run: |
-          cd src/credential-validator
+          cd src/sessions-validator
           npm ci
       
       - name: Build
         run: |
-          cd src/credential-validator
+          cd src/sessions-validator
           npm run build
       
       - name: Create deployment package
         run: |
-          cd src/credential-validator
+          cd src/sessions-validator
           mkdir -p deployment
           cp -r build/* deployment/
           cp package.json deployment/
           cd deployment
           npm install --production
-          zip -r credential-validator-lambda.zip .
+          zip -r sessions-validator-lambda.zip .
       
       - name: Deploy to Lambda
         run: |
-          cd src/credential-validator/deployment
+          cd src/sessions-validator/deployment
           aws lambda update-function-code \
-            --function-name peptide-tracker-credential-validator-dev \
-            --zip-file fileb://credential-validator-lambda.zip \
+            --function-name peptide-tracker-sessions-validator-dev \
+            --zip-file fileb://sessions-validator-lambda.zip \
             --region ${{ env.AWS_REGION }} || \
           aws lambda create-function \
-            --function-name peptide-tracker-credential-validator-dev \
+            --function-name peptide-tracker-sessions-validator-dev \
             --runtime nodejs22.x \
             --role ${{ secrets.AWS_LAMBDA_ROLE_ARN }} \
             --handler index.handler \
-            --zip-file fileb://credential-validator-lambda.zip \
+            --zip-file fileb://sessions-validator-lambda.zip \
             --region ${{ env.AWS_REGION }}
       
       - name: Cleanup
         run: |
-          cd src/credential-validator
+          cd src/sessions-validator
           rm -rf deployment
 
   deploy-auth-service:
@@ -304,7 +304,7 @@ jobs:
           rm -rf deployment
 
   deployment-summary:
-    needs: [detect-changes, deploy-hello-world, deploy-credential-validator, deploy-auth-service]
+    needs: [detect-changes, deploy-hello-world, deploy-sessions-validator, deploy-auth-service]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -315,7 +315,7 @@ jobs:
           echo "| Function | Changed | Deployed |" >> $GITHUB_STEP_SUMMARY
           echo "|----------|---------|----------|" >> $GITHUB_STEP_SUMMARY
           echo "| hello-world | ${{ needs.detect-changes.outputs.hello-world }} | ${{ needs.deploy-hello-world.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| credential-validator | ${{ needs.detect-changes.outputs.credential-validator }} | ${{ needs.deploy-credential-validator.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| sessions-validator | ${{ needs.detect-changes.outputs.sessions-validator }} | ${{ needs.deploy-sessions-validator.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| auth-service | ${{ needs.detect-changes.outputs.auth-service }} | ${{ needs.deploy-auth-service.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Legend:**" >> $GITHUB_STEP_SUMMARY
