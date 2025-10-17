@@ -62,7 +62,10 @@ resource "aws_iam_role_policy" "github_actions_policy" {
           "lambda:GetFunction",
           "lambda:ListFunctions"
         ]
-        Resource = "arn:aws:lambda:*:*:function:peptide-tracker-*"
+        Resource = [
+          "arn:aws:lambda:*:*:function:peptide-tracker-*",
+          "arn:aws:lambda:*:*:function:hello-world-lambda"
+        ]
       },
       {
         Effect = "Allow"
