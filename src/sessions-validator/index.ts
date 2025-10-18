@@ -75,8 +75,23 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const authHeader = event.headers?.Authorization || event.headers?.authorization;
     const jwtToken = authHeader?.replace('Bearer ', '') || token;
 
-    // Check if we have a session to validate
-    if (!session) {
+    // Extract session ID from JWT payload or request body
+    let sessionId = session;
+    
+    // If no session in body, try to extract from JWT payload
+    if (!sessionId && jwtToken) {
+      try {
+        // Decode JWT payload (without verification for now)
+        const payload = JSON.parse(Buffer.from(jwtToken.split('.')[1], 'base64').toString());
+        sessionId = payload.sessionId || payload.session_id || payload.sid;
+        console.log(`Extracted session ID from JWT: ${sessionId}`);
+      } catch (error) {
+        console.log('Could not extract session ID from JWT:', error);
+      }
+    }
+
+    // Check if we have a session ID to validate
+    if (!sessionId) {
       return {
         statusCode: 401,
         headers: {
@@ -88,14 +103,14 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         body: JSON.stringify({
           message: 'Missing session ID',
           timestamp: new Date().toISOString(),
-          error: 'No session ID provided for validation',
+          error: 'No session ID provided in request body or JWT payload',
           source: 'Sessions Validator - Missing Session'
         })
       };
     }
 
     // Validate session against DynamoDB
-    const sessionValidation = await validateSession(session);
+    const sessionValidation = await validateSession(sessionId);
     
     if (!sessionValidation.isValid) {
       return {
@@ -126,7 +141,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         headers: {
           ...event.headers,
           'Authorization': `Bearer ${jwtToken}`,
-          'X-Session': session,
+          'X-Session': sessionId,
           'X-User-Id': sessionValidation.sessionData?.userId || '',
           'X-Validated-By': 'sessions-validator',
           'X-Validation-Timestamp': new Date().toISOString(),
@@ -135,7 +150,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         body: JSON.stringify({
           ...body,
           jwtToken,
-          session,
+          session: sessionId,
           userId: sessionValidation.sessionData?.userId,
           sessionData: sessionValidation.sessionData,
           validatedBy: 'sessions-validator',

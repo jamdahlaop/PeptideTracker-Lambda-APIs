@@ -24,6 +24,34 @@ jest.mock('@aws-sdk/client-lambda', () => ({
   InvokeCommand: jest.fn()
 }));
 
+jest.mock('@aws-sdk/client-dynamodb', () => ({
+  DynamoDBClient: jest.fn().mockImplementation(() => ({
+    send: jest.fn().mockResolvedValue({
+      Item: {
+        sessionId: { S: 'test-session' },
+        userId: { S: 'user-123' },
+        isValid: { BOOL: true },
+        expiresAt: { N: '1734567890000' },
+        createdAt: { N: '1734567890000' },
+        lastAccessedAt: { N: '1734567890000' }
+      }
+    })
+  })),
+  GetItemCommand: jest.fn()
+}));
+
+jest.mock('@aws-sdk/util-dynamodb', () => ({
+  marshall: jest.fn().mockReturnValue({ sessionId: { S: 'test-session' } }),
+  unmarshall: jest.fn().mockReturnValue({
+    sessionId: 'test-session',
+    userId: 'user-123',
+    isValid: true,
+    expiresAt: 1734567890000,
+    createdAt: 1734567890000,
+    lastAccessedAt: 1734567890000
+  })
+}));
+
 // Mock console.log to avoid noise in tests
 const originalConsoleLog = console.log;
 beforeAll(() => {

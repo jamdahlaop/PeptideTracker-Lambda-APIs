@@ -1,4 +1,4 @@
-// Simple test script for credential validator endpoint
+// Test script for sessions-validator with JWT-only (no session in body)
 const https = require('https');
 
 // JWT with session ID in payload: {"sub":"1234567890","name":"John Doe","iat":1516239022,"sessionId":"sess_1234567890abcdef"}
@@ -6,7 +6,7 @@ const jwtWithSessionId = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0N
 
 const testData = {
   token: jwtWithSessionId,
-  session: 'sess_1234567890abcdef', // This will be extracted from JWT if not provided
+  // No session in body - should be extracted from JWT
   targetFunction: 'hello-world-lambda',
   userId: 'user-123'
 };
@@ -24,7 +24,7 @@ const options = {
   }
 };
 
-console.log('Testing Sessions Validator endpoint...');
+console.log('Testing Sessions Validator with JWT-only (session extracted from JWT)...');
 console.log('URL:', `https://${options.hostname}${options.path}`);
 console.log('Payload:', JSON.stringify(testData, null, 2));
 
