@@ -33,6 +33,7 @@ export interface ApiEndpoints {
     verify: string;
   };
   sessionsValidator: string;
+  sessionValidation: string;
 }
 
 // Load configuration based on environment
@@ -51,7 +52,8 @@ function loadConfig(): AppConfig {
             login: "/auth/login",
             verify: "/auth/verify"
           },
-          sessionsValidator: "/sessions-validator"
+          sessionsValidator: "/sessions-validator",
+          sessionValidation: "/session-validation"
         }
       },
       aws: {
@@ -74,7 +76,8 @@ function loadConfig(): AppConfig {
             login: "/auth/login",
             verify: "/auth/verify"
           },
-          sessionsValidator: "/sessions-validator"
+          sessionsValidator: "/sessions-validator",
+          sessionValidation: "/session-validation"
         }
       },
       aws: {

@@ -17,6 +17,7 @@ jobs:
     outputs:
       hello-world: ${{ steps.changes.outputs.hello-world }}
       sessions-validator: ${{ steps.changes.outputs.sessions-validator }}
+      session-validation: ${{ steps.changes.outputs.session-validation }}
       auth-service: ${{ steps.changes.outputs.auth-service }}
     steps:
       - uses: actions/checkout@v4
@@ -31,6 +32,8 @@ jobs:
               - 'src/hello-world/**'
             sessions-validator:
               - 'src/sessions-validator/**'
+            session-validation:
+              - 'src/session-validation/**'
             auth-service:
               - 'src/auth_service/**'
 
@@ -232,6 +235,96 @@ jobs:
       - name: Cleanup
         run: |
           cd src/sessions-validator
+          rm -rf deployment
+
+  test-session-validation:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.session-validation == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          cd src/session-validation
+          npm ci
+      
+      - name: Build
+        run: |
+          cd src/session-validation
+          npm run build
+      
+      - name: Run tests
+        run: |
+          cd src/session-validation
+          npm test
+
+  deploy-session-validation:
+    needs: [detect-changes, test-session-validation]
+    if: ${{ needs.detect-changes.outputs.session-validation == 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Install dependencies
+        run: |
+          cd src/session-validation
+          npm ci
+      
+      - name: Build
+        run: |
+          cd src/session-validation
+          npm run build
+      
+      - name: Create deployment package
+        run: |
+          cd src/session-validation
+          mkdir -p deployment
+          cp -r build/* deployment/
+          cp package.json deployment/
+          cd deployment
+          npm install --production
+          zip -r session-validation-lambda.zip .
+      
+      - name: Deploy to Lambda
+        run: |
+          cd src/session-validation/deployment
+          aws lambda update-function-code \
+            --function-name peptide-tracker-session-validation-dev \
+            --zip-file fileb://session-validation-lambda.zip \
+            --region ${{ env.AWS_REGION }} || \
+          aws lambda create-function \
+            --function-name peptide-tracker-session-validation-dev \
+            --runtime nodejs22.x \
+            --role ${{ secrets.AWS_LAMBDA_ROLE_ARN }} \
+            --handler index.handler \
+            --zip-file fileb://session-validation-lambda.zip \
+            --region ${{ env.AWS_REGION }}
+      
+      - name: Cleanup
+        run: |
+          cd src/session-validation
           rm -rf deployment
 
   deploy-auth-service:
