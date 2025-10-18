@@ -43,7 +43,7 @@ function loadConfig(): AppConfig {
   const configs = {
     development: {
       api: {
-        baseUrl: "https://7v2du6tsqk.execute-api.us-east-1.amazonaws.com/dev",
+        baseUrl: "https://l3349zs8n0.execute-api.us-east-1.amazonaws.com/dev",
         endpoints: {
           hello: "/hello",
           auth: {

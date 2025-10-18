@@ -2,18 +2,16 @@
 const https = require('https');
 
 const testData = {
-  token: 'test-token-123',
-  credentials: {
-    username: 'testuser',
-    password: 'testpass'
-  },
+  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
+  session: 'sess_1234567890abcdef',
+  targetFunction: 'hello-world-lambda',
   userId: 'user-123'
 };
 
 const postData = JSON.stringify(testData);
 
 const options = {
-  hostname: '7v2du6tsqk.execute-api.us-east-1.amazonaws.com',
+  hostname: 'l3349zs8n0.execute-api.us-east-1.amazonaws.com',
   port: 443,
   path: '/dev/sessions-validator',
   method: 'POST',

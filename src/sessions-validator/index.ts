@@ -1,7 +1,66 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
+import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
+import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 
 const lambdaClient = new LambdaClient({ region: 'us-east-1' });
+const dynamoClient = new DynamoDBClient({ region: 'us-east-1' });
+
+// DynamoDB table name for sessions
+const SESSIONS_TABLE = process.env.SESSIONS_TABLE || 'peptide-tracker-sessions-dev';
+
+// Interface for session data
+interface SessionData {
+  sessionId: string;
+  userId: string;
+  isValid: boolean;
+  expiresAt: number;
+  createdAt: number;
+  lastAccessedAt: number;
+}
+
+// Function to validate session against DynamoDB
+async function validateSession(sessionId: string): Promise<{ isValid: boolean; sessionData?: SessionData; error?: string }> {
+  try {
+    console.log(`Validating session: ${sessionId} against table: ${SESSIONS_TABLE}`);
+    
+    const command = new GetItemCommand({
+      TableName: SESSIONS_TABLE,
+      Key: marshall({
+        sessionId: sessionId
+      })
+    });
+
+    const response = await dynamoClient.send(command);
+    
+    if (!response.Item) {
+      console.log(`Session not found: ${sessionId}`);
+      return { isValid: false, error: 'Session not found' };
+    }
+
+    const sessionData = unmarshall(response.Item) as SessionData;
+    const currentTime = Date.now();
+
+    // Check if session has expired
+    if (sessionData.expiresAt && currentTime > sessionData.expiresAt) {
+      console.log(`Session expired: ${sessionId}, expiresAt: ${sessionData.expiresAt}, currentTime: ${currentTime}`);
+      return { isValid: false, error: 'Session expired' };
+    }
+
+    // Check if session is marked as invalid
+    if (!sessionData.isValid) {
+      console.log(`Session marked as invalid: ${sessionId}`);
+      return { isValid: false, error: 'Session invalid' };
+    }
+
+    console.log(`Session valid: ${sessionId}, userId: ${sessionData.userId}`);
+    return { isValid: true, sessionData };
+
+  } catch (error) {
+    console.error(`Error validating session ${sessionId}:`, error);
+    return { isValid: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   console.log('Sessions Validator Lambda function called - npm cache fix test');
@@ -16,10 +75,8 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const authHeader = event.headers?.Authorization || event.headers?.authorization;
     const jwtToken = authHeader?.replace('Bearer ', '') || token;
 
-    // Basic validation - check if we have a token/session
-    const hasValidToken = !!jwtToken || !!session;
-
-    if (!hasValidToken) {
+    // Check if we have a session to validate
+    if (!session) {
       return {
         statusCode: 401,
         headers: {
@@ -29,34 +86,59 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
           'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
         },
         body: JSON.stringify({
-          message: 'Missing authentication token or session',
+          message: 'Missing session ID',
           timestamp: new Date().toISOString(),
-          error: 'No JWT token or session provided',
-          source: 'Sessions Validator - Missing Auth'
+          error: 'No session ID provided for validation',
+          source: 'Sessions Validator - Missing Session'
         })
       };
     }
 
-    // If credentials are valid, forward to the target function
-    const targetFunctionName = targetFunction || 'peptide-tracker-hello-world-dev';
-    console.log(`Forwarding request to: ${targetFunctionName}`);
+    // Validate session against DynamoDB
+    const sessionValidation = await validateSession(session);
+    
+    if (!sessionValidation.isValid) {
+      return {
+        statusCode: 401,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
+        },
+        body: JSON.stringify({
+          message: 'Invalid session',
+          timestamp: new Date().toISOString(),
+          error: sessionValidation.error || 'Session validation failed',
+          source: 'Sessions Validator - Invalid Session'
+        })
+      };
+    }
+
+    // If session is valid, forward to the target function
+    const targetFunctionName = targetFunction || 'hello-world-lambda';
+    console.log(`Forwarding request to: ${targetFunctionName} for user: ${sessionValidation.sessionData?.userId}`);
 
     try {
-      // Create a new event for the target function with JWT token and session
+      // Create a new event for the target function with validated session data
       const targetEvent = {
         ...event,
         headers: {
           ...event.headers,
           'Authorization': `Bearer ${jwtToken}`,
-          'X-Session': session || '',
-          'X-Validated-By': 'credential-validator',
-          'X-Validation-Timestamp': new Date().toISOString()
+          'X-Session': session,
+          'X-User-Id': sessionValidation.sessionData?.userId || '',
+          'X-Validated-By': 'sessions-validator',
+          'X-Validation-Timestamp': new Date().toISOString(),
+          'X-Session-Expires-At': sessionValidation.sessionData?.expiresAt?.toString() || ''
         },
         body: JSON.stringify({
           ...body,
           jwtToken,
           session,
-          validatedBy: 'credential-validator',
+          userId: sessionValidation.sessionData?.userId,
+          sessionData: sessionValidation.sessionData,
+          validatedBy: 'sessions-validator',
           validationTimestamp: new Date().toISOString()
         })
       };
@@ -73,16 +155,17 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         const result = JSON.parse(Buffer.from(response.Payload).toString());
         console.log('Target function response:', result);
         
-        // Return the response from the target function
-        return {
-          statusCode: result.statusCode || 200,
-          headers: {
-            ...result.headers,
-            'X-Validated-By': 'credential-validator',
-            'X-Validation-Timestamp': new Date().toISOString()
-          },
-          body: result.body
-        };
+              // Return the response from the target function
+              return {
+                statusCode: result.statusCode || 200,
+                headers: {
+                  ...result.headers,
+                  'X-Validated-By': 'sessions-validator',
+                  'X-Validation-Timestamp': new Date().toISOString(),
+                  'X-User-Id': sessionValidation.sessionData?.userId || ''
+                },
+                body: result.body
+              };
       } else {
         throw new Error('No response from target function');
       }

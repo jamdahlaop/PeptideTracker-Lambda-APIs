@@ -25,7 +25,13 @@ The Lambda function `credential-validator` has been renamed to `sessions-validat
 - [ ] **Update API Gateway invoke permissions** for new function
 - [ ] **Update Lambda-to-Lambda permissions** (if needed)
 
-### **4. GitHub Actions Workflows**
+### **4. DynamoDB Sessions Table**
+- [ ] **Create sessions table**: `peptide-tracker-sessions-dev`
+- [ ] **Primary key**: `sessionId` (String)
+- [ ] **Add sample test data** for validation testing
+- [ ] **Grant Lambda permissions** to read from sessions table
+
+### **5. GitHub Actions Workflows**
 - [ ] **Update deployment workflow** to use new function name
 - [ ] **Update path filters** in workflow (if needed)
 - [ ] **Update function name references** in deployment scripts
@@ -45,6 +51,8 @@ The Lambda function `credential-validator` has been renamed to `sessions-validat
 - ❌ API Gateway integration
 - ❌ CloudWatch log group
 - ❌ IAM permissions
+- ❌ DynamoDB sessions table
+- ❌ Lambda DynamoDB permissions
 
 ## 🚀 **Implementation Steps**
 
@@ -77,7 +85,33 @@ aws logs create-log-group \
   --region us-east-1
 ```
 
-### **Step 4: Update API Gateway Resource Path**
+### **Step 4: Create DynamoDB Sessions Table**
+```bash
+# Create the sessions table
+aws dynamodb create-table \
+  --table-name peptide-tracker-sessions-dev \
+  --attribute-definitions \
+    AttributeName=sessionId,AttributeType=S \
+  --key-schema \
+    AttributeName=sessionId,KeyType=HASH \
+  --billing-mode PAY_PER_REQUEST \
+  --region us-east-1
+
+# Add sample test data
+aws dynamodb put-item \
+  --table-name peptide-tracker-sessions-dev \
+  --item '{
+    "sessionId": {"S": "sess_1234567890abcdef"},
+    "userId": {"S": "user_12345"},
+    "isValid": {"BOOL": true},
+    "expiresAt": {"N": "1734567890000"},
+    "createdAt": {"N": "1734567890000"},
+    "lastAccessedAt": {"N": "1734567890000"}
+  }' \
+  --region us-east-1
+```
+
+### **Step 5: Update API Gateway Resource Path**
 ```bash
 # Update the resource path from /credential-validator to /sessions-validator
 aws apigateway update-resource \
